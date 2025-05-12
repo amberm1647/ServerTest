@@ -53,6 +53,13 @@ Open the .sln file in Visual Studio and build the server and client. Run the exe
 
 ## Unreal Integration (WIP)
 
+Unreal needs an older version of MSVC to build. When opening the project in VS, there will be a pop up in the upper right above the Solution Explorer prompting you to install additional components; click on the link and install them. The components should be:
+
+- .NET 6.0 Runtime (Out of support)
+- MSVC v143 - VS 2022 C++ x64/x86 build tools (v14.38-17.8)
+
+Please note that this MSVC version will cause gRPC builds outside of Unreal to fail with linker errors.
+
 Referencing this, don't know how much is necessary/applicable: https://kvachev.com/blog/posts/grpc-with-unreal-engine/
 
 Definitely at least copy gRPC libraries into the project:
