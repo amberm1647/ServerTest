@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -12,7 +13,6 @@
 
 #include "proto/helloworld.grpc.pb.h"
 
-#include "CoreMinimal.h"
 #include "GrpcServer.generated.h"
 
 class SERVERTEST_API GrpcServer : public Greeter::Service

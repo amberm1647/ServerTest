@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -9,8 +11,6 @@
 #include <grpcpp/grpcpp.h>
 
 #include "proto/helloworld.grpc.pb.h"
-
-#include "CoreMinimal.h"
 #include "GrpcClient.generated.h"
 
 using grpc::Channel;
