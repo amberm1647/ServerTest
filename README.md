@@ -37,7 +37,7 @@ Make sure you have MSVC v143 or above and Windows 11 SDK 10.0.22621.0 or above.
 
 Install CMake for Windows: https://cmake.org/download
 
-Follow this guide from "Generation of source files using proto file" through "Creating a project using CMake": https://sanoj.in/2020/05/07/working-with-grpc-in-windows.html
+To create an example project, follow this guide from "Generation of source files using proto file" through "Creating a project using CMake": https://sanoj.in/2020/05/07/working-with-grpc-in-windows.html
 
 Filenames and paths in the provided CMakeLists.txt need to be updated to match the example files. If the provided protoc and cmake commands don't work, use these (run from `build` directory):
 
@@ -90,9 +90,7 @@ At this point, building the solution will probably generate a lot of errors.
 Some errors are just warnings that are treated by Unreal Build Tool as errors and can be disabled. In helloworld.grpc.pb.cc and helloworld.pb.cc, add the following before includes:
 
 ```
-#pragma warning(disable: 4125)
 #pragma warning(disable: 4668)
-#pragma warning(disable: 4577)
 #pragma warning(disable: 4800)
 ```
 
