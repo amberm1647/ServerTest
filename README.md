@@ -60,11 +60,87 @@ Unreal needs an older version of MSVC to build. When opening the project in VS, 
 
 Please note that this MSVC version will cause gRPC builds outside of Unreal to fail with linker errors.
 
-Referencing this, don't know how much is necessary/applicable: https://kvachev.com/blog/posts/grpc-with-unreal-engine/
+Add grpc example files generated in previous step -- protobuf files (.proto, .pb.h, .pb.cc, .grpc.pb.h, .grpc.pb.cc) to Source/MyProject/protos/ and client and server (.cc) files to Source/MyProject/src/.
 
-Definitely at least copy gRPC libraries into the project:
+Add the following to MyProject.Build.cs inside the block starting with `public MyProject(ReadOnlyTargetRules Target) : base(Target)` to link third party libraries:
 
 ```
-cp vcpkg/installed/x64-windows/lib/* MyProject/ThirdParty/lib
-cp vcpkg/installed/x64-windows/include/* MyProject/ThirdParty/include
+PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",});
+
+PrivateDependencyModuleNames.AddRange(new string[] {  });
+
+PublicIncludePaths.Add("C:\\src\\vcpkg\\installed\\x64-windows\\include");
+
+string LibrariesPath = "C:\\src\\vcpkg\\installed\\x64-windows\\lib";
+DirectoryInfo d = new DirectoryInfo(LibrariesPath);
+FileInfo[] Files = d.GetFiles("*.lib");
+foreach (FileInfo file in Files)
+{
+    Console.WriteLine("adding " + file.Name);
+    PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, file.Name));
+}
+
+PublicDefinitions.Add("PROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII=0");
+PublicDefinitions.Add("PROTOBUF_BUILTIN_ATOMIC=0");
+PublicDefinitions.Add("GOOGLE_PROTOBUF_NO_RTTI=1");
 ```
+
+At this point, building the solution will probably generate a lot of errors.
+
+Some errors are just warnings that are treated by Unreal Build Tool as errors and can be disabled. In helloworld.grpc.pb.cc and helloworld.pb.cc, add the following before includes:
+
+```
+#pragma warning(disable: 4125)
+#pragma warning(disable: 4668)
+#pragma warning(disable: 4577)
+#pragma warning(disable: 4800)
+```
+
+Abseil errors are caused by a conflict between the function `verify()` defined in the library and UE's macro definition of `verify()`. In C:\src\vcpkg\installed\x64-windows\include\absl\container\internal\btree.h, make the following changes to cancel the UE macro definition in context:
+
+Around line 1579, after modification:
+```
+#ifdef verify
+#undef verify
+#endif
+  // Verifies the structure of the btree.
+  void verify() const;
+#ifndef verify
+#define verify(expr)			UE_CHECK_IMPL(expr)  // copy from line 221 of /Engine/Source/Runtime/Core/Public/Misc/AssertionMacros.h
+#endif
+```
+
+Around line 2610, after modification:
+```
+#ifdef verify
+#undef verify
+#endif
+template <typename P>
+void btree<P>::verify() const {
+  assert(root() != nullptr);
+  assert(leftmost() != nullptr);
+  assert(rightmost() != nullptr);
+  assert(empty() || size() == internal_verify(root(), nullptr, nullptr));
+  assert(leftmost() == (++const_iterator(root(), -1)).node_);
+  assert(rightmost() == (--const_iterator(root(), root()->finish())).node_);
+  assert(leftmost()->is_leaf());
+  assert(rightmost()->is_leaf());
+}
+#ifndef verify
+#define verify(expr)			UE_CHECK_IMPL(expr)  // copy from line 221 of /Engine/Source/Runtime/Core/Public/Misc/AssertionMacros.h
+#endif
+```
+
+In file C:\src\vcpkg\installed\x64-windows\include\absl\container\internal\btree_container.h, around line 225, after modification: 
+
+```
+#ifdef verify
+#undef verify
+#endif
+  void verify() const { tree_.verify(); }
+#ifndef verify
+#define verify(expr)			UE_CHECK_IMPL(expr)  // copy from line 221 of /Engine/Source/Runtime/Core/Public/Misc/AssertionMacros.h
+#endif
+```
+
+(Taken from https://forums.unrealengine.com/t/abseil-cpp-absl-in-thirdparty-redefinition-error/1794996/2)
