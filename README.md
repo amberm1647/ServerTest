@@ -1,5 +1,7 @@
 # ServerTest
 
+This is old; please refer to https://github.com/amberm1647/unreal_grpc_helloworld instead
+
 ## Install gRPC using vcpkg
 
 Run in Powershell:
